@@ -1,8 +1,30 @@
+arch:
+  - amd64
+  - arm64
+os: linux
 language: java
 jdk:
   - openjdk8
+before_install:
+  - wget https://apachemirror.sg.wuchna.com/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+  - tar zxvf apache-maven-3.6.3-bin.tar.gz
+  - sudo mv apache-maven-3.6.3/ /opt/apache-maven-3.6.3/
+  - sudo ln -s /opt/apache-maven-3.6.3/ /opt/maven
+  - export M2_HOME=/opt/maven
+  - export M2=$M2_HOME/bin
+  - export PATH=$M2:$PATH
 
 install:
   - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Pci
-after_success:
-  - mvn clean test jacoco:report coveralls:report -Pci
+script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - |
+    # A list of default architectures that will be built
+    if [ "$TRAVIS_CPU_ARCH" == "amd64" ]; then 
+      travis_wait 60 docker build -t $DOCKER_USERNAME/$IMAGE_NAME:latest .
+      docker push $DOCKER_USERNAME/$IMAGE_NAME
+    fi
+    if [ "$TRAVIS_CPU_ARCH" == "arm64" ]; then 
+      travis_wait 60 docker build -f Dockerfile-arm64v8 -t $DOCKER_USERNAME/$TRAVIS_CPU_ARCH-$IMAGE_NAME:latest .
+      docker push $DOCKER_USERNAME/$TRAVIS_CPU_ARCH-$IMAGE_NAME
+    fi
