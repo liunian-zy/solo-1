@@ -13,6 +13,7 @@ package org.b3log.solo.service;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +36,7 @@ import java.util.*;
  * Import service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.1.7, May 21, 2020
+ * @version 1.0.1.8, Jun 16, 2020
  * @since 2.2.0
  */
 @Service
@@ -64,7 +65,7 @@ public class ImportService {
     private UserQueryService userQueryService;
 
     /**
-     * Imports markdown files as articles. See <a href="https://hacpai.com/article/1498490209748">Solo 支持 Hexo/Jekyll 数据导入</a> for more details.
+     * Imports markdown files as articles. See <a href="https://ld246.com/article/1498490209748">Solo 支持 Hexo/Jekyll 数据导入</a> for more details.
      */
     public void importMarkdowns() {
         new Thread(() -> {
@@ -177,9 +178,7 @@ public class ImportService {
             ret.put(Article.ARTICLE_ABSTRACT, Article.getAbstractText(fileContent));
             ret.put(Article.ARTICLE_TAGS_REF, DEFAULT_TAG);
             ret.put(Article.ARTICLE_STATUS, Article.ARTICLE_STATUS_C_PUBLISHED);
-            ret.put(Article.ARTICLE_COMMENTABLE, true);
             ret.put(Article.ARTICLE_VIEW_PWD, "");
-
             return ret;
         }
 
@@ -199,11 +198,15 @@ public class ImportService {
         final String abs = parseAbstract(elems, content);
         ret.put(Article.ARTICLE_ABSTRACT, abs);
 
-        final Date date = parseDate(elems);
+        Date date = parseDate(elems);
         ret.put(Article.ARTICLE_CREATED, date.getTime());
 
-        // 文章 id 必须使用存档时间戳，否则生成的存档时间会是当前时间
-        // 导入 Markdown 文件存档时间问题 https://github.com/88250/solo/issues/112
+        // 文章 id 必须使用存档时间戳，否则生成的存档时间会是当前时间：导入 Markdown 文件存档时间问题 https://github.com/88250/solo/issues/112
+        // 另外，如果原文中存在重复时间，则需要增加随机数避免 id 重复：自动生成的文章链接重复问题优化 https://github.com/88250/solo/issues/147
+        final Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.MILLISECOND, RandomUtils.nextInt(256));
+        date = calendar.getTime();
         ret.put(Keys.OBJECT_ID, String.valueOf(date.getTime()));
 
         final String permalink = (String) elems.get("permalink");
@@ -218,11 +221,8 @@ public class ImportService {
         }
         tagBuilder.deleteCharAt(tagBuilder.length() - 1);
         ret.put(Article.ARTICLE_TAGS_REF, tagBuilder.toString());
-
         ret.put(Article.ARTICLE_STATUS, Article.ARTICLE_STATUS_C_PUBLISHED);
-        ret.put(Article.ARTICLE_COMMENTABLE, true);
         ret.put(Article.ARTICLE_VIEW_PWD, "");
-
         return ret;
     }
 
@@ -237,7 +237,6 @@ public class ImportService {
         if (StringUtils.isNotBlank(ret)) {
             return ret;
         }
-
         return Article.getAbstractText(content);
     }
 
@@ -262,7 +261,6 @@ public class ImportService {
         } else if (date instanceof Date) {
             return (Date) date;
         }
-
         return new Date();
     }
 
@@ -284,7 +282,6 @@ public class ImportService {
         }
         if (null == tags) {
             ret.add(DEFAULT_TAG);
-
             return ret;
         }
 
@@ -301,7 +298,6 @@ public class ImportService {
             }
         }
         ret.addAll(tagSet);
-
         return ret;
     }
 }

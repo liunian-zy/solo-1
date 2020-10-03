@@ -27,6 +27,7 @@ import org.b3log.latke.service.ServiceException;
 import org.b3log.solo.service.UserMgmtService;
 import org.b3log.solo.service.UserQueryService;
 import org.b3log.solo.util.Solos;
+import org.b3log.solo.util.StatusCodes;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -35,7 +36,7 @@ import java.util.List;
  * User console request processing.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author <a href="https://hacpai.com/member/DASHU">DASHU</a>
+ * @author <a href="https://ld246.com/member/DASHU">DASHU</a>
  * @version 2.0.0.0, Feb 9, 2020
  * @since 0.4.0
  */
@@ -85,7 +86,7 @@ public class UserConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -102,12 +103,12 @@ public class UserConsole {
             final JSONObject requestJSONObject = context.requestJSON();
             userMgmtService.updateUser(requestJSONObject);
 
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
             ret.put(Keys.MSG, langPropsService.get("updateSuccLabel"));
             renderer.setJSONObject(ret);
         } catch (final ServiceException e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, langPropsService.get("updateFailLabel"));
         }
@@ -119,7 +120,7 @@ public class UserConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -136,11 +137,11 @@ public class UserConsole {
             final String userId = context.pathVar("id");
             userMgmtService.removeUser(userId);
 
-            jsonObject.put(Keys.STATUS_CODE, true);
+            jsonObject.put(Keys.CODE, StatusCodes.SUCC);
             jsonObject.put(Keys.MSG, langPropsService.get("removeSuccLabel"));
         } catch (final ServiceException e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
-            jsonObject.put(Keys.STATUS_CODE, false);
+            jsonObject.put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, langPropsService.get("removeFailLabel"));
         }
     }
@@ -165,7 +166,7 @@ public class UserConsole {
      *         "roleName": "",
      *         ....
      *      }, ....]
-     *     "sc": true
+     *     "code": 0
      * }
      * </pre>
      * </p>
@@ -181,7 +182,7 @@ public class UserConsole {
             final String path = requestURI.substring((Latkes.getContextPath() + "/console/users/").length());
             final JSONObject requestJSONObject = Solos.buildPaginationRequest(path);
             final JSONObject result = userQueryService.getUsers(requestJSONObject);
-            result.put(Keys.STATUS_CODE, true);
+            result.put(Keys.CODE, StatusCodes.SUCC);
             renderer.setJSONObject(result);
 
             final List<JSONObject> users = (List<JSONObject>) result.opt(User.USERS);
@@ -192,7 +193,7 @@ public class UserConsole {
             }
         } catch (final ServiceException e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, langPropsService.get("getFailLabel"));
         }
@@ -204,7 +205,7 @@ public class UserConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "user": {
      *         "oId": "",
      *         "userName": "",
@@ -223,14 +224,14 @@ public class UserConsole {
 
         final JSONObject result = userQueryService.getUser(userId);
         if (null == result) {
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, langPropsService.get("getFailLabel"));
             return;
         }
 
         renderer.setJSONObject(result);
-        result.put(Keys.STATUS_CODE, true);
+        result.put(Keys.CODE, StatusCodes.SUCC);
     }
 
     /**
@@ -239,7 +240,7 @@ public class UserConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -256,11 +257,11 @@ public class UserConsole {
             final String userId = context.pathVar("id");
             userMgmtService.changeRole(userId);
 
-            jsonObject.put(Keys.STATUS_CODE, true);
+            jsonObject.put(Keys.CODE, StatusCodes.SUCC);
             jsonObject.put(Keys.MSG, langPropsService.get("updateSuccLabel"));
         } catch (final ServiceException e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
-            jsonObject.put(Keys.STATUS_CODE, false);
+            jsonObject.put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, langPropsService.get("removeFailLabel"));
         }
     }

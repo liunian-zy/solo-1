@@ -52,7 +52,7 @@ import static org.b3log.solo.model.Article.ARTICLE_CONTENT;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 1.7.1.0, May 18, 2020
+ * @version 1.7.1.2, Jul 8, 2020
  * @since 0.3.1
  */
 @Service
@@ -68,12 +68,6 @@ public class DataModelService {
      */
     @Inject
     private ArticleRepository articleRepository;
-
-    /**
-     * Comment repository.
-     */
-    @Inject
-    private CommentRepository commentRepository;
 
     /**
      * Archive date repository.
@@ -519,7 +513,11 @@ public class DataModelService {
         }
         dataModel.put(Option.ID_C_SHOW_CODE_BLOCK_LN, showCodeBlockLn);
 
-        dataModel.put(Common.COMMENTABLE, preference.optBoolean(Option.ID_C_COMMENTABLE));
+        String speech = preference.optString(Option.ID_C_SPEECH);
+        if (StringUtils.isBlank(speech)) {
+            speech = "true";
+        }
+        dataModel.put(Option.ID_C_SPEECH, Boolean.parseBoolean(speech));
 
         dataModel.put("staticSite", Solos.GEN_STATIC_SITE);
         if (!Solos.GEN_STATIC_SITE) {

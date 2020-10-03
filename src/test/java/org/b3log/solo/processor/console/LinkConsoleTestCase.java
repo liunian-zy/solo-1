@@ -43,10 +43,10 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         final JSONObject requestJSON = new JSONObject();
         final JSONObject link = new JSONObject();
         requestJSON.put(Link.LINK, link);
-        link.put(Link.LINK_TITLE, "黑客派");
-        link.put(Link.LINK_ADDRESS, "https://hacpai.com");
+        link.put(Link.LINK_TITLE, "链滴");
+        link.put(Link.LINK_ADDRESS, "https://ld246.com");
         link.put(Link.LINK_DESCRIPTION, "黑客与画家的社区");
-        link.put(Link.LINK_ICON, "https://static.hacpai.com/images/favicon.png");
+        link.put(Link.LINK_ICON, "https://static.ld246.com/images/favicon.png");
         request.setJSON(requestJSON);
 
         mockAdminLogin(request);
@@ -55,7 +55,7 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         mockDispatcher(request, response);
 
         final String content = response.getString();
-        Assert.assertTrue(StringUtils.contains(content, "sc\":true"));
+        Assert.assertTrue(StringUtils.contains(content, "code\":0"));
     }
 
     /**
@@ -75,10 +75,10 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         final JSONObject link = new JSONObject();
         requestJSON.put(Link.LINK, link);
         link.put(Keys.OBJECT_ID, linkId);
-        link.put(Link.LINK_TITLE, "黑客派");
-        link.put(Link.LINK_ADDRESS, "https://hacpai.com");
+        link.put(Link.LINK_TITLE, "链滴");
+        link.put(Link.LINK_ADDRESS, "https://ld246.com");
         link.put(Link.LINK_DESCRIPTION, "B3log 开源社区线上论坛");
-        link.put(Link.LINK_ICON, "https://static.hacpai.com/images/favicon.png");
+        link.put(Link.LINK_ICON, "https://static.ld246.com/images/favicon.png");
         request.setJSON(requestJSON);
 
         mockAdminLogin(request);
@@ -87,7 +87,7 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         mockDispatcher(request, response);
 
         final String content = response.getString();
-        Assert.assertTrue(StringUtils.contains(content, "sc\":true"));
+        Assert.assertTrue(StringUtils.contains(content, "code\":0"));
     }
 
     /**
@@ -114,7 +114,7 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         mockDispatcher(request, response);
 
         final String content = response.getString();
-        Assert.assertTrue(StringUtils.contains(content, "sc\":true"));
+        Assert.assertTrue(StringUtils.contains(content, "code\":0"));
     }
 
     /**
@@ -136,7 +136,7 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         mockDispatcher(request, response);
 
         final String content = response.getString();
-        Assert.assertTrue(StringUtils.contains(content, "sc\":true"));
+        Assert.assertTrue(StringUtils.contains(content, "code\":0"));
     }
 
     /**
@@ -153,7 +153,7 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         mockDispatcher(request, response);
 
         final String content = response.getString();
-        Assert.assertTrue(StringUtils.contains(content, "sc\":true"));
+        Assert.assertTrue(StringUtils.contains(content, "code\":0"));
     }
 
     /**
@@ -176,6 +176,6 @@ public class LinkConsoleTestCase extends AbstractTestCase {
         mockDispatcher(request, response);
 
         final String content = response.getString();
-        Assert.assertTrue(StringUtils.contains(content, "sc\":true"));
+        Assert.assertTrue(StringUtils.contains(content, "code\":0"));
     }
 }

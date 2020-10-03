@@ -40,6 +40,7 @@ import org.b3log.solo.processor.console.*;
 import org.b3log.solo.repository.OptionRepository;
 import org.b3log.solo.service.*;
 import org.b3log.solo.util.Markdowns;
+import org.b3log.solo.util.Statics;
 import org.json.JSONObject;
 
 import java.io.StringWriter;
@@ -49,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Server.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 3.0.1.7, May 21, 2020
+ * @version 3.0.1.15, Sep 9, 2020
  * @since 1.2.0
  */
 public final class Server extends BaseServer {
@@ -62,7 +63,7 @@ public final class Server extends BaseServer {
     /**
      * Solo version.
      */
-    public static final String VERSION = "4.1.0";
+    public static final String VERSION = "4.3.1";
 
     /**
      * In-Memory tail logger writer.
@@ -168,7 +169,7 @@ public final class Server extends BaseServer {
             Latkes.setScanPath("org.b3log.solo");
             Latkes.init();
         } catch (final Exception e) {
-            LOGGER.log(Level.ERROR, "Latke init failed, please configure latke.props or run with args, visit https://hacpai.com/article/1492881378588 for more details");
+            LOGGER.log(Level.ERROR, "Latke init failed, please configure latke.props or run with args, visit https://ld246.com/article/1492881378588 for more details");
 
             System.exit(-1);
         }
@@ -264,6 +265,8 @@ public final class Server extends BaseServer {
         final InitService initService = beanManager.getReference(InitService.class);
         initService.initTables();
 
+        Statics.clear();
+
         if (initService.isInited()) {
             // Upgrade check https://github.com/b3log/solo/issues/12040
             final UpgradeService upgradeService = beanManager.getReference(UpgradeService.class);
@@ -331,9 +334,7 @@ public final class Server extends BaseServer {
      */
     private static void loadPreference() {
         Stopwatchs.start("Load Preference");
-
         LOGGER.debug("Loading preference....");
-
         final BeanManager beanManager = BeanManager.getInstance();
         final OptionQueryService optionQueryService = beanManager.getReference(OptionQueryService.class);
         JSONObject skin;
@@ -351,16 +352,11 @@ public final class Server extends BaseServer {
                 return;
             }
 
-            final String showClodeBlockLn = preference.optString(org.b3log.solo.model.Option.ID_C_SHOW_CODE_BLOCK_LN);
-            Markdowns.SHOW_CODE_BLOCK_LN = StringUtils.equalsIgnoreCase(showClodeBlockLn, "true");
-            final String showToC = preference.optString(org.b3log.solo.model.Option.ID_C_SHOW_TOC);
-            Markdowns.SHOW_TOC = StringUtils.equalsIgnoreCase(showToC, "true");
+            Markdowns.loadMarkdownOption(preference);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
-
             System.exit(-1);
         }
-
         Stopwatchs.end();
     }
 
@@ -432,8 +428,8 @@ public final class Server extends BaseServer {
         articleGroup.post("/console/markdown/2html", articleProcessor::markdown2HTML).
                 get("/console/article-pwd", articleProcessor::showArticlePwdForm).
                 post("/console/article-pwd", articleProcessor::onArticlePwdForm).
-                post("/articles/random", articleProcessor::getRandomArticles).
-                get("/article/id/{id}/relevant/articles", articleProcessor::getRelevantArticles).
+                get("/articles/random.json", articleProcessor::getRandomArticles).
+                get("/article/relevant/{id}.json", articleProcessor::getRelevantArticles).
                 get("/get-article-content", articleProcessor::getArticleContent).
                 get("/articles", articleProcessor::getArticlesByPage).
                 get("/articles/tags/{tagTitle}", articleProcessor::getTagArticlesByPage).
@@ -445,7 +441,7 @@ public final class Server extends BaseServer {
 
         final B3Receiver b3Receiver = beanManager.getReference(B3Receiver.class);
         final Dispatcher.RouterGroup b3Group = Dispatcher.group();
-        b3Group.router().post().put().uri("/apis/symphony/article").handler(b3Receiver::postArticle);
+        b3Group.post("/apis/symphony/article", b3Receiver::receiveArticle);
 
         final BlogProcessor blogProcessor = beanManager.getReference(BlogProcessor.class);
         final Dispatcher.RouterGroup blogGroup = Dispatcher.group();
@@ -459,10 +455,6 @@ public final class Server extends BaseServer {
         categoryGroup.get("/articles/category/{categoryURI}", categoryProcessor::getCategoryArticlesByPage).
                 get("/category/{categoryURI}", categoryProcessor::showCategoryArticles);
 
-        final CommentProcessor commentProcessor = beanManager.getReference(CommentProcessor.class);
-        final Dispatcher.RouterGroup commentGroup = Dispatcher.group();
-        commentGroup.post("/article/comments", commentProcessor::addArticleComment);
-
         final FeedProcessor feedProcessor = beanManager.getReference(FeedProcessor.class);
         final Dispatcher.RouterGroup feedGroup = Dispatcher.group();
         feedGroup.middlewares(staticMidware::handle);
@@ -473,7 +465,8 @@ public final class Server extends BaseServer {
         final Dispatcher.RouterGroup indexGroup = Dispatcher.group();
         indexGroup.middlewares(staticMidware::handle);
         indexGroup.router().get(new String[]{"", "/", "/index.html"}, indexProcessor::showIndex);
-        indexGroup.get("/start", indexProcessor::showStart).
+        indexGroup.get("/favicon.ico", indexProcessor::showFavicon).
+                get("/start", indexProcessor::showStart).
                 get("/logout", indexProcessor::logout).
                 get("/kill-browser", indexProcessor::showKillBrowser);
 
@@ -523,7 +516,6 @@ public final class Server extends BaseServer {
                 post("/console/import/markdown-zip", adminConsole::importMarkdownZip);
         adminConsoleGroup.router().get(new String[]{"/admin-article.do",
                 "/admin-article-list.do",
-                "/admin-comment-list.do",
                 "/admin-link-list.do",
                 "/admin-page-list.do",
                 "/admin-others.do",
@@ -550,18 +542,10 @@ public final class Server extends BaseServer {
                 put("/console/article/", articleConsole::updateArticle).
                 post("/console/article/", articleConsole::addArticle);
 
-        final CommentConsole commentConsole = beanManager.getReference(CommentConsole.class);
-        final Dispatcher.RouterGroup commentConsoleGroup = Dispatcher.group();
-        commentConsoleGroup.middlewares(consoleAuthMidware::handle);
-        commentConsoleGroup.delete("/console/article/comment/{id}", commentConsole::removeArticleComment).
-                get("/console/comments/{page}/{pageSize}/{windowSize}", commentConsole::getComments).
-                get("/console/comments/article/{id}", commentConsole::getArticleComments);
-
         final TagConsole tagConsole = beanManager.getReference(TagConsole.class);
         final Dispatcher.RouterGroup tagConsoleGroup = Dispatcher.group();
         tagConsoleGroup.middlewares(consoleAuthMidware::handle);
-        tagConsoleGroup.get("/console/tags", tagConsole::getTags).
-                get("/console/tag/unused", tagConsole::getUnusedTags);
+        tagConsoleGroup.get("/console/tags", tagConsole::getTags);
 
         final CategoryConsole categoryConsole = beanManager.getReference(CategoryConsole.class);
         final Dispatcher.RouterGroup categoryGroup = Dispatcher.group();

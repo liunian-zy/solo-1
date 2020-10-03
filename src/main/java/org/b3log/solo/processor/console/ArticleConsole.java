@@ -33,6 +33,7 @@ import org.b3log.solo.service.ArticleQueryService;
 import org.b3log.solo.service.UserQueryService;
 import org.b3log.solo.util.Images;
 import org.b3log.solo.util.Solos;
+import org.b3log.solo.util.StatusCodes;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -96,7 +97,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": true,
+     *     "code": 0,
      *     "data": [
      *         "https://b3logfile.com/bing/20171226.jpg?imageView2/1/w/960/h/540/interlace/1/q/100",
      *         "https://b3logfile.com/bing/20171105.jpg?imageView2/1/w/960/h/540/interlace/1/q/100",
@@ -114,7 +115,7 @@ public class ArticleConsole {
         context.setRenderer(renderer);
         final JSONObject result = new JSONObject();
         renderer.setJSONObject(result);
-        result.put(Keys.STATUS_CODE, true);
+        result.put(Keys.CODE, StatusCodes.SUCC);
         final Request request = context.getRequest();
         String strN = context.param("n");
         if (!Strings.isNumeric(strN)) {
@@ -162,7 +163,7 @@ public class ArticleConsole {
      *         "oId": "",
      *         "signHTML": ""
      *     }, ....]
-     *     "sc": "GET_ARTICLE_SUCC"
+     *     "code": 0
      * }
      * </pre>
      * </p>
@@ -178,18 +179,18 @@ public class ArticleConsole {
             if (!articleQueryService.canAccessArticle(articleId, currentUser)) {
                 final JSONObject ret = new JSONObject();
                 renderer.setJSONObject(ret);
-                ret.put(Keys.STATUS_CODE, false);
+                ret.put(Keys.CODE, StatusCodes.ERR);
                 ret.put(Keys.MSG, langPropsService.get("forbiddenLabel"));
                 return;
             }
 
             final JSONObject result = articleQueryService.getArticle(articleId);
-            result.put(Keys.STATUS_CODE, true);
+            result.put(Keys.CODE, StatusCodes.SUCC);
             renderer.setJSONObject(result);
         } catch (final ServiceException e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, langPropsService.get("getFailLabel"));
         }
@@ -206,7 +207,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "pagination": {
      *         "paginationPageCount": 100,
      *         "paginationPageNums": [1, 2, 3, 4, 5]
@@ -214,7 +215,6 @@ public class ArticleConsole {
      *     "articles": [{
      *         "oId": "",
      *         "articleTitle": "",
-     *         "articleCommentCount": int,
      *         "articleCreateTime"; long,
      *         "articleViewCount": int,
      *         "articleTags": "tag1, tag2, ....",
@@ -252,7 +252,7 @@ public class ArticleConsole {
             }
 
             final JSONObject result = articleQueryService.getArticles(requestJSONObject);
-            result.put(Keys.STATUS_CODE, true);
+            result.put(Keys.CODE, StatusCodes.SUCC);
             renderer.setJSONObject(result);
 
             final List<JSONObject> articles = (List<JSONObject>) result.opt(Article.ARTICLES);
@@ -264,7 +264,7 @@ public class ArticleConsole {
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, langPropsService.get("getFailLabel"));
         }
@@ -276,7 +276,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -294,21 +294,21 @@ public class ArticleConsole {
 
         try {
             if (!articleQueryService.canAccessArticle(articleId, currentUser)) {
-                ret.put(Keys.STATUS_CODE, false);
+                ret.put(Keys.CODE, StatusCodes.ERR);
                 ret.put(Keys.MSG, langPropsService.get("forbiddenLabel"));
                 return;
             }
 
             articleMgmtService.removeArticle(articleId);
 
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
             ret.put(Keys.MSG, langPropsService.get("removeSuccLabel"));
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
             final JSONObject jsonObject = new JSONObject();
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.STATUS_CODE, false);
+            jsonObject.put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, langPropsService.get("removeFailLabel"));
         }
     }
@@ -319,7 +319,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -337,21 +337,21 @@ public class ArticleConsole {
             final String articleId = context.pathVar("id");
             final JSONObject currentUser = Solos.getCurrentUser(context);
             if (!articleQueryService.canAccessArticle(articleId, currentUser)) {
-                ret.put(Keys.STATUS_CODE, false);
+                ret.put(Keys.CODE, StatusCodes.ERR);
                 ret.put(Keys.MSG, langPropsService.get("forbiddenLabel"));
                 return;
             }
 
             articleMgmtService.cancelPublishArticle(articleId);
 
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
             ret.put(Keys.MSG, langPropsService.get("unPulbishSuccLabel"));
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
             final JSONObject jsonObject = new JSONObject();
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.STATUS_CODE, false);
+            jsonObject.put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, langPropsService.get("unPulbishFailLabel"));
         }
     }
@@ -362,7 +362,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -377,21 +377,21 @@ public class ArticleConsole {
         renderer.setJSONObject(ret);
         if (!Solos.isAdminLoggedIn(context)) {
             ret.put(Keys.MSG, langPropsService.get("forbiddenLabel"));
-            ret.put(Keys.STATUS_CODE, false);
+            ret.put(Keys.CODE, StatusCodes.ERR);
             return;
         }
 
         try {
             final String articleId = context.pathVar("id");
             articleMgmtService.topArticle(articleId, false);
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
             ret.put(Keys.MSG, langPropsService.get("cancelTopSuccLabel"));
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
             final JSONObject jsonObject = new JSONObject();
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.STATUS_CODE, false);
+            jsonObject.put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, langPropsService.get("cancelTopFailLabel"));
         }
     }
@@ -402,7 +402,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -417,21 +417,21 @@ public class ArticleConsole {
         renderer.setJSONObject(ret);
         if (!Solos.isAdminLoggedIn(context)) {
             ret.put(Keys.MSG, langPropsService.get("forbiddenLabel"));
-            ret.put(Keys.STATUS_CODE, false);
+            ret.put(Keys.CODE, StatusCodes.ERR);
             return;
         }
 
         try {
             final String articleId = context.pathVar("id");
             articleMgmtService.topArticle(articleId, true);
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
             ret.put(Keys.MSG, langPropsService.get("putTopSuccLabel"));
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
             final JSONObject jsonObject = new JSONObject();
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.STATUS_CODE, false);
+            jsonObject.put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, langPropsService.get("putTopFailLabel"));
         }
     }
@@ -451,7 +451,6 @@ public class ArticleConsole {
      *         "articlePermalink": "", // optional
      *         "articleStatus": int, // 0: published, 1: draft
      *         "articleSignId": "" // optional
-     *         "articleCommentable": boolean,
      *         "articleViewPwd": "",
      *         "postToCommunity": boolean
      *     }
@@ -462,7 +461,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "msg": ""
      * }
      * </pre>
@@ -483,7 +482,7 @@ public class ArticleConsole {
             final JSONObject currentUser = Solos.getCurrentUser(context);
             if (!articleQueryService.canAccessArticle(articleId, currentUser)) {
                 ret.put(Keys.MSG, langPropsService.get("forbiddenLabel"));
-                ret.put(Keys.STATUS_CODE, false);
+                ret.put(Keys.CODE, StatusCodes.ERR);
                 return;
             }
 
@@ -493,9 +492,9 @@ public class ArticleConsole {
             articleMgmtService.updateArticle(requestJSONObject);
 
             ret.put(Keys.MSG, langPropsService.get("updateSuccLabel"));
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
         } catch (final ServiceException e) {
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, e.getMessage());
         }
@@ -516,7 +515,6 @@ public class ArticleConsole {
      *         "articleStatus": int, // 0: published, 1: draft
      *         "postToCommunity": boolean,
      *         "articleSignId": "" // optional
-     *         "articleCommentable": boolean,
      *         "articleViewPwd": ""
      *     }
      * }
@@ -526,7 +524,7 @@ public class ArticleConsole {
      * Renders the response with a json object, for example,
      * <pre>
      * {
-     *     "sc": boolean,
+     *     "code": int,
      *     "oId": "", // Generated article id
      *     "msg": ""
      * }
@@ -550,11 +548,11 @@ public class ArticleConsole {
             final String articleId = articleMgmtService.addArticle(requestJSONObject);
             ret.put(Keys.OBJECT_ID, articleId);
             ret.put(Keys.MSG, langPropsService.get("addSuccLabel"));
-            ret.put(Keys.STATUS_CODE, true);
+            ret.put(Keys.CODE, StatusCodes.SUCC);
 
             renderer.setJSONObject(ret);
         } catch (final ServiceException e) {
-            final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             renderer.setJSONObject(jsonObject);
             jsonObject.put(Keys.MSG, e.getMessage());
         }

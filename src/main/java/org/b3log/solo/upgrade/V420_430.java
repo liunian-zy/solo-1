@@ -14,7 +14,6 @@ package org.b3log.solo.upgrade;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.b3log.latke.Keys;
 import org.b3log.latke.Latkes;
 import org.b3log.latke.ioc.BeanManager;
 import org.b3log.latke.repository.Transaction;
@@ -24,31 +23,30 @@ import org.b3log.solo.repository.OptionRepository;
 import org.json.JSONObject;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Upgrade script from v3.3.0 to v3.4.0.
+ * Upgrade script from v4.2.0 to v4.3.0.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.0.0, Mar 19, 2019
- * @since 3.4.0
+ * @version 1.0.1.0, Aug 17, 2020
+ * @since 4.3.0
  */
-public final class V330_340 {
+public final class V420_430 {
 
     /**
      * Logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(V330_340.class);
+    private static final Logger LOGGER = LogManager.getLogger(V420_430.class);
 
     /**
-     * Performs upgrade from v3.3.0 to v3.4.0.
+     * Performs upgrade from v4.2.0 to v4.3.0.
      *
      * @throws Exception upgrade fails
      */
     public static void perform() throws Exception {
-        final String fromVer = "3.3.0";
-        final String toVer = "3.4.0";
+        final String fromVer = "4.2.0";
+        final String toVer = "4.3.0";
 
         LOGGER.log(Level.INFO, "Upgrading from version [" + fromVer + "] to version [" + toVer + "]....");
 
@@ -56,45 +54,33 @@ public final class V330_340 {
         final OptionRepository optionRepository = beanManager.getReference(OptionRepository.class);
 
         try {
-            final String tablePrefix = Latkes.getLocalProperty("jdbc.tablePrefix") + "_";
             final Connection connection = Connections.getConnection();
             final Statement statement = connection.createStatement();
-            // 修复升级程序问题 https://github.com/b3log/solo/issues/12717
-            final ResultSet resultSet = statement.executeQuery("SELECT count(*) AS C FROM information_schema.COLUMNS WHERE table_name = '" + tablePrefix + "user" + "' AND column_name = 'userPassword'");
-            while (resultSet.next()) {
-                final int c = resultSet.getInt("C");
-                if (0 < c) {
-                    final Statement drop = connection.createStatement();
-                    drop.executeUpdate("ALTER TABLE `" + tablePrefix + "user` DROP COLUMN `userPassword`");
-                    drop.close();
-                }
-            }
-            resultSet.close();
+            final String tablePrefix = Latkes.getLocalProperty("jdbc.tablePrefix") + "_";
+            statement.executeUpdate("ALTER TABLE `" + tablePrefix + "article` DROP COLUMN `articleCommentCount`");
+            statement.executeUpdate("ALTER TABLE `" + tablePrefix + "article` DROP COLUMN `articleViewCount`");
+            statement.executeUpdate("ALTER TABLE `" + tablePrefix + "article` DROP COLUMN `articleCommentable`");
             statement.close();
             connection.commit();
             connection.close();
 
             final Transaction transaction = optionRepository.beginTransaction();
 
-            JSONObject syncGitHubOpt = optionRepository.get(Option.ID_C_SYNC_GITHUB);
-            if (null == syncGitHubOpt) {
-                syncGitHubOpt = new JSONObject();
-                syncGitHubOpt.put(Keys.OBJECT_ID, Option.ID_C_SYNC_GITHUB);
-                syncGitHubOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
-                syncGitHubOpt.put(Option.OPTION_VALUE, Option.DefaultPreference.DEFAULT_SYNC_GITHUB);
-                optionRepository.add(syncGitHubOpt);
-            }
-
             final JSONObject versionOpt = optionRepository.get(Option.ID_C_VERSION);
             versionOpt.put(Option.OPTION_VALUE, toVer);
             optionRepository.update(Option.ID_C_VERSION, versionOpt);
+
+            // 清理后台无用的配置项 https://github.com/88250/solo/issues/160
+            optionRepository.remove("mostCommentArticleDisplayCount");
+            optionRepository.remove("mostViewArticleDisplayCount");
+            optionRepository.remove("recentCommentDisplayCount");
+            optionRepository.remove("commentable");
 
             transaction.commit();
 
             LOGGER.log(Level.INFO, "Upgraded from version [" + fromVer + "] to version [" + toVer + "] successfully");
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Upgrade failed!", e);
-
             throw new Exception("Upgrade failed from version [" + fromVer + "] to version [" + toVer + "]");
         }
     }

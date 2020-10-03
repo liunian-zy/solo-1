@@ -25,12 +25,12 @@ import org.b3log.latke.ioc.BeanManager;
 import org.b3log.latke.ioc.Inject;
 import org.b3log.latke.ioc.Singleton;
 import org.b3log.latke.service.LangPropsService;
-import org.b3log.latke.util.CollectionUtils;
 import org.b3log.latke.util.Strings;
 import org.b3log.solo.model.*;
 import org.b3log.solo.service.*;
 import org.b3log.solo.util.Mocks;
 import org.b3log.solo.util.Solos;
+import org.b3log.solo.util.StatusCodes;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -81,13 +81,13 @@ public class StaticSiteConsole {
             final JSONObject requestJSONObject = context.requestJSON();
             final String url = requestJSONObject.optString(Common.URL);
             if (!Strings.isURL(url)) {
-                context.renderJSON(-1);
+                context.renderJSON(StatusCodes.ERR);
                 context.renderMsg("Invalid site URL");
                 return;
             }
 
             if (Latkes.isInJar()) {
-                context.renderJSON(-1);
+                context.renderJSON(StatusCodes.ERR);
                 context.renderMsg("Do not support this feature while running in Jar");
                 return;
             }
@@ -111,6 +111,7 @@ public class StaticSiteConsole {
             genURI("/blog/info");
             genURI("/manifest.json");
             genURI("/rss.xml");
+            genURI("/articles/random.json");
 
             genArticles();
             genTags();
@@ -130,12 +131,12 @@ public class StaticSiteConsole {
 
             String siteGenedLabel = langPropsService.get("siteGenedLabel");
             siteGenedLabel = siteGenedLabel.replace("{dir}", staticSitePath);
-            context.renderJSON(0);
+            context.renderJSON(StatusCodes.SUCC);
             context.renderMsg(siteGenedLabel);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Generates static site failed", e);
 
-            context.renderJSON(-1);
+            context.renderJSON(StatusCodes.ERR);
             context.renderMsg(langPropsService.get("updateFailLabel"));
         }
     }
@@ -258,6 +259,7 @@ public class StaticSiteConsole {
                 final String permalink = article.optString(Article.ARTICLE_PERMALINK);
                 try {
                     genArticle(permalink);
+                    genURI("/article/relevant/" + article.optString(Keys.OBJECT_ID) + ".json");
                 } catch (final Exception e) {
                     LOGGER.log(Level.ERROR, "Generates an article [uri=" + permalink + "] failed", e);
                 }

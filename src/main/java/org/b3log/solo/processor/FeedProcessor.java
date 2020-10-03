@@ -49,7 +49,7 @@ import java.util.List;
  * Feed (Atom/RSS) processor.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author <a href="https://hacpai.com/member/nanolikeyou">nanolikeyou</a>
+ * @author <a href="https://ld246.com/member/nanolikeyou">nanolikeyou</a>
  * @version 3.0.0.0, Feb 9, 2020
  * @since 0.3.1
  */
@@ -176,7 +176,7 @@ public class FeedProcessor {
             channel.setLastBuildDate(new Date());
             channel.setLink(Latkes.getServePath());
             channel.setAtomLink(Latkes.getServePath() + "/rss.xml");
-            channel.setGenerator("Solo, v" + Server.VERSION + ", https://solo.b3log.org");
+            channel.setGenerator("Solo, v" + Server.VERSION + ", https://b3log.org/solo");
             final String localeString = preference.getString(Option.ID_C_LOCALE_STRING);
             final String country = Locales.getCountry(localeString).toLowerCase();
             final String language = Locales.getLanguage(localeString).toLowerCase();

@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
  * Export service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.2.0.0, May 20, 2020
+ * @version 1.2.0.3, Sep 3, 2020
  * @since 2.5.0
  */
 @Service
@@ -96,12 +96,6 @@ public class ExportService {
      */
     @Inject
     private CategoryTagRepository categoryTagRepository;
-
-    /**
-     * Comment repository.
-     */
-    @Inject
-    private CommentRepository commentRepository;
 
     /**
      * Link repository.
@@ -383,8 +377,8 @@ public class ExportService {
             stat.put("skin", optionQueryService.getOptionById(Option.ID_C_SKIN_DIR_NAME).optString(Option.OPTION_VALUE));
             stat.put("mobileSkin", optionQueryService.getOptionById(Option.ID_C_MOBILE_SKIN_DIR_NAME).optString(Option.OPTION_VALUE));
 
-            final HttpResponse response = HttpRequest.post("https://hacpai.com/github/repos").
-                    connectionTimeout(7000).timeout(60000).trustAllCerts(true).header("User-Agent", Solos.USER_AGENT).
+            final HttpResponse response = HttpRequest.post("https://ld246.com/github/repos").
+                    connectionTimeout(7000).timeout(60000).trustAllCerts(true).followRedirects(true).header("User-Agent", Solos.USER_AGENT).
                     form("userName", userName,
                             "userB3Key", userB3Key,
                             "clientName", "Solo",
@@ -415,47 +409,6 @@ public class ExportService {
             articleIds.add(article.optString(Keys.OBJECT_ID));
         }
         bodyBuilder.append("\n\n");
-
-        final StringBuilder mostViewBuilder = new StringBuilder();
-        final List<JSONObject> mostViewArticles = articleRepository.getList(new Query().setFilter(published).select(Keys.OBJECT_ID, Article.ARTICLE_TITLE, Article.ARTICLE_PERMALINK).addSort(Article.ARTICLE_VIEW_COUNT, SortDirection.DESCENDING).setPage(1, 40));
-        int count = 0;
-        for (final JSONObject article : mostViewArticles) {
-            final String articleId = article.optString(Keys.OBJECT_ID);
-            if (!articleIds.contains(articleId)) {
-                final String title = article.optString(Article.ARTICLE_TITLE);
-                final String link = Latkes.getServePath() + article.optString(Article.ARTICLE_PERMALINK);
-                mostViewBuilder.append("\n* [").append(title).append("](").append(link).append(")");
-                articleIds.add(articleId);
-                count++;
-            }
-            if (20 <= count) {
-                break;
-            }
-        }
-        if (0 < mostViewBuilder.length()) {
-            bodyBuilder.append("### 热门\n").append(mostViewBuilder).append("\n\n");
-        }
-
-        final StringBuilder mostCmtBuilder = new StringBuilder();
-        final List<JSONObject> mostCmtArticles = articleRepository.getList(new Query().setFilter(published).select(Keys.OBJECT_ID, Article.ARTICLE_TITLE, Article.ARTICLE_PERMALINK).addSort(Article.ARTICLE_COMMENT_COUNT, SortDirection.DESCENDING).setPage(1, 60));
-        count = 0;
-        for (final JSONObject article : mostCmtArticles) {
-            final String articleId = article.optString(Keys.OBJECT_ID);
-            if (!articleIds.contains(articleId)) {
-                final String title = article.optString(Article.ARTICLE_TITLE);
-                final String link = Latkes.getServePath() + article.optString(Article.ARTICLE_PERMALINK);
-                mostCmtBuilder.append("\n* [").append(title).append("](").append(link).append(")");
-                articleIds.add(articleId);
-                count++;
-            }
-            if (20 <= count) {
-                break;
-            }
-        }
-        if (0 < mostCmtBuilder.length()) {
-            bodyBuilder.append("### 热议\n").append(mostCmtBuilder);
-        }
-
 
         String ret = "<p align=\"center\"><img alt=\"${title}\" src=\"${favicon}\"></p><h2 align=\"center\">\n" +
                 "${title}\n" +
@@ -583,9 +536,6 @@ public class ExportService {
 
         final JSONArray categoryTags = getJSONs(categoryTagRepository);
         ret.put(Category.CATEGORY + "_" + Tag.TAG, categoryTags);
-
-        final JSONArray comments = getJSONs(commentRepository);
-        ret.put(Comment.COMMENTS, comments);
 
         final JSONArray links = getJSONs(linkRepository);
         ret.put(Link.LINKS, links);

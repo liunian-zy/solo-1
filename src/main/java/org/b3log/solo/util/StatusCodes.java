@@ -9,35 +9,32 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-package org.b3log.solo.event;
+package org.b3log.solo.util;
 
 /**
- * Event types.
+ * Status code constants and utilities.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.1.0.10, Jul 8, 2020
- * @since 0.3.1
+ * @version 1.0.0.0, Jun 19, 2020
+ * @since 4.2.0
  */
-public final class EventTypes {
+public final class StatusCodes {
 
     /**
-     * Indicates a add article event.
+     * Indicates an error occurred.
      */
-    public static final String ADD_ARTICLE = "Add Article";
+    public static final int ERR = -1;
 
     /**
-     * Indicates a update article event.
+     * Indicates success.
      */
-    public static final String UPDATE_ARTICLE = "Update Article";
+    public static final int SUCC = 0;
 
     /**
-     * Indicates a before render article event.
+     * Indicates not found.
      */
-    public static final String BEFORE_RENDER_ARTICLE = "Before Render Article";
+    public static final int NOT_FOUND = 1;
 
-    /**
-     * Private constructor.
-     */
-    private EventTypes() {
+    private StatusCodes() {
     }
 }

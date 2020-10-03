@@ -43,10 +43,10 @@ import java.util.*;
  * Article query service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author <a href="https://hacpai.com/member/armstrong">ArmstrongCN</a>
- * @author <a href="https://hacpai.com/member/ZephyrJung">Zephyr</a>
+ * @author <a href="https://ld246.com/member/armstrong">ArmstrongCN</a>
+ * @author <a href="https://ld246.com/member/ZephyrJung">Zephyr</a>
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 1.3.6.1, May 30, 2020
+ * @version 1.3.6.2, Jul 8, 2020
  * @since 0.3.5
  */
 @Service
@@ -435,10 +435,8 @@ public class ArticleQueryService {
             article.put(Sign.SIGNS, new JSONArray(preference.getString(Option.ID_C_SIGNS)));
             // Remove unused properties
             article.remove(Article.ARTICLE_AUTHOR_ID);
-            article.remove(Article.ARTICLE_COMMENT_COUNT);
             article.remove(Article.ARTICLE_PUT_TOP);
             article.remove(Article.ARTICLE_UPDATED);
-            article.remove(Article.ARTICLE_VIEW_COUNT);
             article.remove(Article.ARTICLE_RANDOM_DOUBLE);
             LOGGER.log(Level.DEBUG, "Got an article [id={}]", articleId);
             return ret;
@@ -472,7 +470,6 @@ public class ArticleQueryService {
      *     "articles": [{
      *         "oId": "",
      *         "articleTitle": "",
-     *         "articleCommentCount": int,
      *         "articleCreateTime"; long,
      *         "articleViewCount": int,
      *         "articleTags": "tag1, tag2, ....",
@@ -940,16 +937,13 @@ public class ArticleQueryService {
         article.remove(Keys.OBJECT_ID);
         article.remove(Article.ARTICLE_AUTHOR_ID);
         article.remove(Article.ARTICLE_ABSTRACT);
-        article.remove(Article.ARTICLE_COMMENT_COUNT);
         article.remove(Article.ARTICLE_CONTENT);
         article.remove(Article.ARTICLE_CREATED);
         article.remove(Article.ARTICLE_TAGS_REF);
         article.remove(Article.ARTICLE_UPDATED);
-        article.remove(Article.ARTICLE_VIEW_COUNT);
         article.remove(Article.ARTICLE_RANDOM_DOUBLE);
         article.remove(Article.ARTICLE_PUT_TOP);
         article.remove(Article.ARTICLE_VIEW_PWD);
         article.remove(Article.ARTICLE_SIGN_ID);
-        article.remove(Article.ARTICLE_COMMENTABLE);
     }
 }
