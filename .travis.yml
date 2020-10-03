@@ -6,6 +6,7 @@ language: java
 jdk:
   - openjdk8
 before_install:
+  - sudo apt-get update
   - wget https://apachemirror.sg.wuchna.com/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
   - tar zxvf apache-maven-3.6.3-bin.tar.gz
   - sudo mv apache-maven-3.6.3/ /opt/apache-maven-3.6.3/
